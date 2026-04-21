@@ -16,5 +16,8 @@ class Report extends Model
         'format',
         'status',
         'file_path',
+        'name',
+        'email',
+        'description',
     ];
 }

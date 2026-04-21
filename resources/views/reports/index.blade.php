@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -66,6 +67,8 @@
         }
 
         input[type="date"],
+        input[type="text"],
+        input[type="email"],
         select {
             width: 100%;
             padding: 12px 15px;
@@ -77,6 +80,8 @@
         }
 
         input[type="date"]:focus,
+        input[type="text"]:focus,
+        input[type="email"]:focus,
         select:focus {
             outline: none;
             border-color: #667eea;
@@ -169,6 +174,7 @@
                 transform: translateX(400px);
                 opacity: 0;
             }
+
             to {
                 transform: translateX(0);
                 opacity: 1;
@@ -180,6 +186,7 @@
                 transform: translateX(0);
                 opacity: 1;
             }
+
             to {
                 transform: translateX(400px);
                 opacity: 0;
@@ -259,12 +266,13 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>Bank Reports</h1>
 
         <!-- Toast Notification -->
-        @if(session('success'))
+        @if (session('success'))
             <div class="toast-container" id="toastContainer">
                 <div class="toast success" id="toast">
                     <div class="toast-content">
@@ -294,6 +302,19 @@
 
                 <div class="form-group">
                     <div>
+                        <label for="name">Customer Name:</label>
+                        <input type="text" name="name" id="name" placeholder="Enter customer name" required
+                            style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 1rem; background-color: #f9f9f9; transition: all 0.3s ease;">
+                    </div>
+                    <div>
+                        <label for="email">Customer Email:</label>
+                        <input type="email" name="email" id="email" placeholder="Enter customer email" required
+                            style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 1rem; background-color: #f9f9f9; transition: all 0.3s ease;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div>
                         <label for="transaction_type">Transaction Type:</label>
                         <select name="transaction_type" id="transaction_type" required>
                             <option value="">-- Select Transaction Type --</option>
@@ -314,7 +335,8 @@
 
                 <div class="form-group full">
                     <label for="description">Description (optional):</label>
-                    <textarea name="description" id="description" placeholder="Enter description..." rows="4" style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 1rem; background-color: #f9f9f9; transition: border-color 0.3s ease;"></textarea>
+                    <textarea name="description" id="description" placeholder="Enter description..." rows="4"
+                        style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 1rem; background-color: #f9f9f9; transition: border-color 0.3s ease;"></textarea>
                 </div>
 
                 <div class="form-group full">
@@ -342,14 +364,13 @@
                         <tr>
                             <td>#{{ $report->id }}</td>
                             <td>
-                                <span style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
-                                    @if($report->status === 'completed')
-                                        background-color: #d1fae5; color: #065f46;
+                                <span
+                                    style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
+                                    @if ($report->status === 'completed') background-color: #d1fae5; color: #065f46;
                                     @elseif($report->status === 'processing')
                                         background-color: #fef3c7; color: #92400e;
                                     @else
-                                        background-color: #e5e7eb; color: #374151;
-                                    @endif
+                                        background-color: #e5e7eb; color: #374151; @endif
                                 ">
                                     {{ ucfirst($report->status) }}
                                 </span>
@@ -358,8 +379,10 @@
                             <td>{{ $report->description ?? '—' }}</td>
                             <td>{{ $report->created_at->format('Y-m-d H:i:s') }}</td>
                             <td>
-                                @if($report->status === 'completed')
-                                    <a href="{{ route('reports.download', $report->id) }}">⬇ Download</a>
+                                @if ($report->status === 'completed')
+                                    <a href="{{ route('reports.download', $report->id) }}" style="margin-right: 10px;">⬇
+                                        Download</a>
+                                    <a href="{{ route('reports.send', $report->id) }}">📧 Send to User</a>
                                 @else
                                     <span style="color: #999;">Processing...</span>
                                 @endif
@@ -367,7 +390,8 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" style="padding: 20px; text-align: center; color: #666;">No reports have been generated yet.</td>
+                            <td colspan="6" style="padding: 20px; text-align: center; color: #666;">No reports have
+                                been generated yet.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -405,4 +429,5 @@
         }
     </script>
 </body>
+
 </html>
