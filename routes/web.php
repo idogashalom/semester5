@@ -11,5 +11,6 @@ use App\Http\Controllers\ReportController;
 Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
 Route::get('/reports/create', [ReportController::class, 'create'])->name('reports.create');
 Route::post('/reports/generate', [ReportController::class, 'generate'])->name('reports.generate');
-Route::get('/reports/download/{id}', [ReportController::class, 'download'])->name('reports.download');
-Route::get('/reports/send/{id}', [ReportController::class, 'sendReport'])->name('reports.send');
+Route::get('/reports/download/{id}/{type}', [ReportController::class, 'download'])->name('reports.download');
+Route::get('/reports/email/{id}', [ReportController::class, 'sendEmail'])->name('reports.email');
+Route::post('/reports/delete-selected', [ReportController::class, 'deleteSelected'])->name('reports.deleteSelected');

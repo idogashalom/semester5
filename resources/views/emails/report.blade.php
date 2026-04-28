@@ -6,13 +6,13 @@
 
     <div style="background: white; padding: 30px; border-radius: 0 0 8px 8px; border: 1px solid #e0e0e0;">
         <p style="color: #333; font-size: 16px; line-height: 1.6;">
-            Hello <strong>{{ $report->name }}</strong>,
+            Hello <strong>{{ $report->name ?? 'Customer' }}</strong>,
         </p>
 
         <p style="color: #555; font-size: 15px; line-height: 1.6;">
             Your requested bank report has been generated and is ready for download.
-            The report covers transactions from <strong>{{ $report->start_date }}</strong> to
-            <strong>{{ $report->end_date }}</strong>.
+            The report covers transactions from <strong>{{ $report->start_date ?? 'N/A' }}</strong> to
+            <strong>{{ $report->end_date ?? 'N/A' }}</strong>.
         </p>
 
         <div
@@ -21,12 +21,12 @@
                 <strong>Report Details:</strong>
             </p>
             <p style="margin: 5px 0; color: #666; font-size: 14px;">
-                Format: <strong>{{ $report->format }}</strong>
+                Format: <strong>{{ $report->format ?? 'N/A' }}</strong>
             </p>
             <p style="margin: 5px 0; color: #666; font-size: 14px;">
-                Transaction Type: <strong>{{ ucfirst($report->transaction_type) }}</strong>
+                Transaction Type: <strong>{{ !empty($report->transaction_type) ? ucfirst($report->transaction_type) : 'N/A' }}</strong>
             </p>
-            @if ($report->description)
+            @if (!empty($report->description))
                 <p style="margin: 5px 0; color: #666; font-size: 14px;">
                     Description: <strong>{{ $report->description }}</strong>
                 </p>

@@ -5,8 +5,6 @@ namespace App\Mail;
 use App\Models\Report;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 class ReportMail extends Mailable
@@ -15,26 +13,20 @@ class ReportMail extends Mailable
 
     public function __construct(public Report $report) {}
 
-    public function envelope(): Envelope
+    public function build()
     {
-        return new Envelope(
-            subject: 'Your Bank Report',
-        );
-    }
+        $mail = $this->subject('Your Generated Report')
+            ->view('emails.report');
 
-    public function content(): Content
-    {
-        return new Content(
-            view: 'emails.report',
-        );
-    }
+        $fileName = $this->report->file_pdf ?? $this->report->file_excel;
+        
+        if (!empty($fileName)) {
+            $filePath = storage_path("app/reports/{$fileName}");
+            if (file_exists($filePath)) {
+                $mail->attach($filePath);
+            }
+        }
 
-    public function attachments(): array
-    {
-        return [
-            \Illuminate\Mail\Mailables\Attachment::fromPath(
-                storage_path('app/' . $this->report->file_path)
-            ),
-        ];
+        return $mail;
     }
 }

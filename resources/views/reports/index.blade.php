@@ -14,7 +14,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: white;
             min-height: 100vh;
             padding: 20px;
         }
@@ -26,7 +26,7 @@
 
         h1 {
             text-align: center;
-            color: white;
+            color: #333;
             margin-bottom: 40px;
             font-size: 2.5rem;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
@@ -160,6 +160,59 @@
             text-decoration: underline;
         }
 
+        /* Button Styling */
+        .btn {
+            display: inline-block;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin-right: 8px;
+            margin-bottom: 6px;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+
+        .btn-primary {
+            background-color: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background-color: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #059669;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-warning {
+            background-color: #f59e0b;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #d97706;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+        }
+
         /* Toast Notification */
         .toast-container {
             position: fixed;
@@ -279,7 +332,18 @@
                         <div class="toast-message">{{ session('success') }}</div>
                         <a href="{{ route('reports.index') }}" class="toast-button">View Reports</a>
                     </div>
-                    <button class="toast-close" onclick="closeToast()">&times;</button>
+                    <button class="toast-close" onclick="closeToast('toastContainer', 'toast')">&times;</button>
+                </div>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="toast-container" id="toastErrorContainer" style="top: 90px;">
+                <div class="toast" id="toastError" style="border-left-color: #ef4444;">
+                    <div class="toast-content">
+                        <div class="toast-message" style="color: #ef4444;">{{ session('error') }}</div>
+                    </div>
+                    <button class="toast-close" onclick="closeToast('toastErrorContainer', 'toastError')">&times;</button>
                 </div>
             </div>
         @endif
@@ -347,65 +411,83 @@
 
         <!-- Reports Table -->
         <div class="table-card">
-            <h2>Generated Reports</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Report ID</th>
-                        <th>Status</th>
-                        <th>Format</th>
-                        <th>Description</th>
-                        <th>Created Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin-bottom: 0;">Generated Reports</h2>
+                <button type="submit" form="deleteForm" class="btn" style="background-color: #ef4444; color: white;" onclick="return confirm('Are you sure you want to delete selected reports?')">Delete Selected</button>
+            </div>
+            <form id="deleteForm" action="{{ route('reports.deleteSelected') }}" method="POST">
+                @csrf
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40px; text-align: center;"><input type="checkbox" onclick="document.querySelectorAll('.report-checkbox').forEach(cb => cb.checked = this.checked)"></th>
+                            <th>Report ID</th>
+                            <th>Status</th>
+                            <th>Format</th>
+                            <th>Description</th>
+                            <th>Created Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                     @forelse($reports as $report)
                         <tr>
+                            <td style="text-align: center;"><input type="checkbox" name="report_ids[]" value="{{ $report->id }}" class="report-checkbox"></td>
                             <td>#{{ $report->id }}</td>
                             <td>
-                                <span
-                                    style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
-                                    @if ($report->status === 'completed') background-color: #d1fae5; color: #065f46;
-                                    @elseif($report->status === 'processing')
-                                        background-color: #fef3c7; color: #92400e;
-                                    @else
-                                        background-color: #e5e7eb; color: #374151; @endif
-                                ">
-                                    {{ ucfirst($report->status) }}
+                                @php
+                                    $statusStyle = 'background-color: #e5e7eb; color: #374151;';
+                                    if ($report->status === 'completed' || $report->status === 'done') {
+                                        $statusStyle = 'background-color: #d1fae5; color: #065f46;';
+                                    } elseif ($report->status === 'processing') {
+                                        $statusStyle = 'background-color: #fef3c7; color: #92400e;';
+                                    }
+                                @endphp
+                                <span style="display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; text-transform: capitalize; {{ $statusStyle }}">        
+                                    {{ $report->status }}
                                 </span>
                             </td>
                             <td>{{ $report->format }}</td>
                             <td>{{ $report->description ?? '—' }}</td>
                             <td>{{ $report->created_at->format('Y-m-d H:i:s') }}</td>
                             <td>
-                                @if ($report->status === 'completed')
-                                    <a href="{{ route('reports.download', $report->id) }}" style="margin-right: 10px;">⬇
-                                        Download</a>
-                                    <a href="{{ route('reports.send', $report->id) }}">📧 Send to User</a>
-                                @else
-                                    <span style="color: #999;">Processing...</span>
-                                @endif
+                                <!-- SINGLE DOWNLOAD BUTTON WITH DROPDOWN -->
+                                <div style="position: relative; display: inline-block;" class="dropdown-container">
+                                    <button type="button" class="btn btn-sm btn-primary" onclick="toggleDropdown('{{ $report->id }}')" style="margin-bottom: 0;">
+                                        Download &#9662;
+                                    </button>
+                                    <div id="dropdown-{{ $report->id }}" class="dropdown-menu" style="display: none; position: absolute; background-color: #fff; min-width: 120px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10; border-radius: 6px; overflow: hidden; top: 100%; left: 0; border: 1px solid #eee;">
+                                        <a href="{{ route('reports.download', ['id' => $report->id, 'type' => 'pdf']) }}" style="display: block; padding: 8px 12px; font-weight: normal; color: #333; border-bottom: 1px solid #f0f0f0;">PDF</a>
+                                        <a href="{{ route('reports.download', ['id' => $report->id, 'type' => 'excel']) }}" style="display: block; padding: 8px 12px; font-weight: normal; color: #333;">Excel</a>
+                                    </div>
+                                </div>
+
+                                <!-- SEND EMAIL BUTTON -->
+                                <a href="{{ route('reports.email', ['id' => $report->id]) }}"
+                                    class="btn btn-sm btn-warning" style="margin-bottom: 0;">
+                                    Send to Email
+                                </a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" style="padding: 20px; text-align: center; color: #666;">No reports have
+                            <td colspan="7" style="padding: 20px; text-align: center; color: #666;">No reports have
                                 been generated yet.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
+            </form>
         </div>
     </div>
 
     <script>
-        function closeToast() {
-            const toast = document.getElementById('toast');
+        function closeToast(containerId = 'toastContainer', toastId = 'toast') {
+            const toast = document.getElementById(toastId);
             if (toast) {
                 toast.classList.add('hide');
                 setTimeout(() => {
-                    const container = document.getElementById('toastContainer');
+                    const container = document.getElementById(containerId);
                     if (container) {
                         container.remove();
                     }
@@ -418,14 +500,36 @@
             const container = document.getElementById('toastContainer');
             if (container) {
                 setTimeout(() => {
-                    closeToast();
+                    closeToast('toastContainer', 'toast');
+                }, 5000);
+            }
+            
+            const errorContainer = document.getElementById('toastErrorContainer');
+            if (errorContainer) {
+                setTimeout(() => {
+                    closeToast('toastErrorContainer', 'toastError');
                 }, 5000);
             }
         }
 
         // Initialize toast on page load
-        if (document.getElementById('toastContainer')) {
-            autoHideToast();
+        autoHideToast();
+
+        function toggleDropdown(id) {
+            const dropdown = document.getElementById('dropdown-' + id);
+            const isVisible = dropdown.style.display === 'block';
+
+            document.querySelectorAll('.dropdown-menu').forEach(el => el.style.display = 'none');
+
+            if (!isVisible) {
+                dropdown.style.display = 'block';
+            }
+        }
+
+        window.onclick = function(event) {
+            if (!event.target.matches('.btn-primary') && !event.target.closest('.dropdown-container')) {
+                document.querySelectorAll('.dropdown-menu').forEach(el => el.style.display = 'none');
+            }
         }
     </script>
 </body>
