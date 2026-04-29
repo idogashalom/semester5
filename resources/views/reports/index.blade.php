@@ -466,7 +466,7 @@
 
                                 <!-- SEND EMAIL BUTTON -->
                                 <a href="{{ route('reports.email', ['id' => $report->id]) }}"
-                                    class="btn btn-sm btn-warning" style="margin-bottom: 0;">
+                                    class="btn btn-sm btn-warning" style="margin-bottom: 0; background-color: #f59e0b; color: white; decoration: none;">
                                     Send to Email
                                 </a>
                             </td>

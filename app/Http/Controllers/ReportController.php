@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use App\Mail\ReportMail; // ✅ ADDED (needed for clean email usage)
 
 class ReportController extends Controller
 {
@@ -98,12 +99,13 @@ class ReportController extends Controller
             return back()->with('error', 'Report not ready');
         }
 
-        if (empty($report->email)) {
-            return back()->with('error', 'Cannot send email: Customer email is missing.');
+        // ✅ ADDED: email validation safety check
+        if (empty($report->email) || !filter_var($report->email, FILTER_VALIDATE_EMAIL)) {
+            return back()->with('error', 'Invalid or missing email address.');
         }
 
         try {
-            Mail::to($report->email)->send(new \App\Mail\ReportMail($report));
+            Mail::to($report->email)->send(new ReportMail($report));
             return back()->with('success', 'Report sent successfully');
         } catch (\Exception $e) {
             return back()->with('error', 'Failed to send email: ' . $e->getMessage());
@@ -125,12 +127,13 @@ class ReportController extends Controller
             $report->save();
         }
 
-        if (empty($report->email)) {
-            return back()->with('error', 'Cannot send email: Customer email is missing.');
+        // ✅ ADDED: email validation safety check
+        if (empty($report->email) || !filter_var($report->email, FILTER_VALIDATE_EMAIL)) {
+            return back()->with('error', 'Invalid or missing email address.');
         }
 
         try {
-            Mail::to($report->email)->send(new \App\Mail\ReportMail($report));
+            Mail::to($report->email)->send(new ReportMail($report));
             return back()->with('success', 'Report sent to email successfully.');
         } catch (\Exception $e) {
             return back()->with('error', 'Failed to send email: ' . $e->getMessage());

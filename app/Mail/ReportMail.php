@@ -28,12 +28,18 @@ class ReportMail extends Mailable
         } else {
             $fileName = $this->report->file_pdf ?? $this->report->file_excel;
         }
-        
+
         if (!empty($fileName)) {
             $filePath = storage_path("app/reports/{$fileName}");
             if (file_exists($filePath)) {
                 $mail->attach($filePath);
             }
+        }
+
+        // ✅ ADDED: fallback protection (prevents silent email failures)
+        // ensures email is always properly formatted before sending
+        if (empty($this->report->email) || !filter_var($this->report->email, FILTER_VALIDATE_EMAIL)) {
+            throw new \Exception("Invalid recipient email address.");
         }
 
         return $mail;
