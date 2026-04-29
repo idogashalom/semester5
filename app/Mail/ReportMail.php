@@ -18,7 +18,16 @@ class ReportMail extends Mailable
         $mail = $this->subject('Your Generated Report')
             ->view('emails.report');
 
-        $fileName = $this->report->file_pdf ?? $this->report->file_excel;
+        $format = strtolower($this->report->format ?? '');
+        $fileName = null;
+
+        if ($format === 'excel' && !empty($this->report->file_excel)) {
+            $fileName = $this->report->file_excel;
+        } elseif (($format === 'pdf' || empty($format)) && !empty($this->report->file_pdf)) {
+            $fileName = $this->report->file_pdf;
+        } else {
+            $fileName = $this->report->file_pdf ?? $this->report->file_excel;
+        }
         
         if (!empty($fileName)) {
             $filePath = storage_path("app/reports/{$fileName}");

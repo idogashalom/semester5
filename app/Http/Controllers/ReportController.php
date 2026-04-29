@@ -148,64 +148,44 @@ class ReportController extends Controller
         $filePath = $directory . '/' . $fileName;
 
         if ($type === 'pdf') {
-            $html = '<div style="font-family: sans-serif; padding: 20px;">
-                <h1 style="color: #667eea;">Bank Report #' . $report->id . '</h1>
-                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-                    <tr><th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd; width: 30%;">Name:</th><td style="padding: 8px; border-bottom: 1px solid #ddd;">' . htmlspecialchars($report->name ?? '') . '</td></tr>
-                    <tr><th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Email:</th><td style="padding: 8px; border-bottom: 1px solid #ddd;">' . htmlspecialchars($report->email ?? '') . '</td></tr>
-                    <tr><th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Start Date:</th><td style="padding: 8px; border-bottom: 1px solid #ddd;">' . htmlspecialchars($report->start_date ?? '') . '</td></tr>
-                    <tr><th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">End Date:</th><td style="padding: 8px; border-bottom: 1px solid #ddd;">' . htmlspecialchars($report->end_date ?? '') . '</td></tr>
-                    <tr><th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Transaction Type:</th><td style="padding: 8px; border-bottom: 1px solid #ddd;">' . htmlspecialchars(ucfirst($report->transaction_type ?? '')) . '</td></tr>
-                    <tr><th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Format:</th><td style="padding: 8px; border-bottom: 1px solid #ddd;">' . htmlspecialchars($report->format ?? 'N/A') . '</td></tr>
-                    <tr><th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Description:</th><td style="padding: 8px; border-bottom: 1px solid #ddd;">' . htmlspecialchars($report->description ?? 'N/A') . '</td></tr>
-                    <tr><th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Status:</th><td style="padding: 8px; border-bottom: 1px solid #ddd;">' . htmlspecialchars(ucfirst($report->status ?? '')) . '</td></tr>
-                    <tr><th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Created At:</th><td style="padding: 8px; border-bottom: 1px solid #ddd;">' . htmlspecialchars($report->created_at ? $report->created_at->format('Y-m-d H:i:s') : '') . '</td></tr>
-                </table>
-            </div>';
-
-            $dompdf = new \Dompdf\Dompdf();
-            $dompdf->setOptions(new \Dompdf\Options(['isHtml5ParserEnabled' => true]));
-            $dompdf->loadHtml($html);
-            $dompdf->setPaper('A4', 'portrait');
-            $dompdf->render();
-            file_put_contents($filePath, $dompdf->output());
+            $defaultPdf = storage_path('app/default-reports/Bank_Report_Sample.pdf');
+            if (file_exists($defaultPdf)) {
+                copy($defaultPdf, $filePath);
+            }
         } else {
-            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-            $sheet = $spreadsheet->getActiveSheet();
+            $defaultExcel = storage_path('app/default-reports/Bank_Report_Sample.xlsx');
+            if (file_exists($defaultExcel)) {
+                try {
+                    $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($defaultExcel);
+                    $sheet = $spreadsheet->getActiveSheet();
 
-            $sheet->setCellValue('A1', 'Bank Report #' . $report->id);
-            $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
+                    $sheet->setCellValue('A1', 'Bank Report #' . $report->id);
 
-            $headers = ['Field', 'Value'];
-            $sheet->setCellValue('A3', $headers[0]);
-            $sheet->setCellValue('B3', $headers[1]);
-            $sheet->getStyle('A3:B3')->getFont()->setBold(true);
+                    $data = [
+                        ['Name', $report->name],
+                        ['Email', $report->email],
+                        ['Start Date', $report->start_date],
+                        ['End Date', $report->end_date],
+                        ['Transaction Type', ucfirst($report->transaction_type)],
+                        ['Format', $report->format ?? 'N/A'],
+                        ['Description', $report->description ?? 'N/A'],
+                        ['Status', 'Done'],
+                        ['Created At', $report->created_at ? $report->created_at->format('Y-m-d H:i:s') : ''],
+                    ];
 
-            $data = [
-                ['Name', $report->name],
-                ['Email', $report->email],
-                ['Start Date', $report->start_date],
-                ['End Date', $report->end_date],
-                ['Transaction Type', ucfirst($report->transaction_type)],
-                ['Format', $report->format ?? 'N/A'],
-                ['Description', $report->description ?? 'N/A'],
-                ['Status', ucfirst($report->status)],
-                ['Created At', $report->created_at ? $report->created_at->format('Y-m-d H:i:s') : ''],
-            ];
+                    $row = 4;
+                    foreach ($data as $item) {
+                        $sheet->setCellValue('A' . $row, $item[0]);
+                        $sheet->setCellValue('B' . $row, $item[1]);
+                        $row++;
+                    }
 
-            $row = 4;
-            foreach ($data as $item) {
-                $sheet->setCellValue('A' . $row, $item[0]);
-                $sheet->setCellValue('B' . $row, $item[1]);
-                $row++;
+                    $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+                    $writer->save($filePath);
+                } catch (\Exception $e) {
+                    copy($defaultExcel, $filePath);
+                }
             }
-
-            foreach (range('A', 'B') as $col) {
-                $sheet->getColumnDimension($col)->setAutoSize(true);
-            }
-
-            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-            $writer->save($filePath);
         }
 
         return $fileName;

@@ -322,8 +322,10 @@
 
 <body>
     <div class="container">
-        <h1>Bank Reports</h1>
-
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
+            <h1 style="margin-bottom: 0;">Bank Reports</h1>
+            <a href="{{ route('admin.index') }}" class="btn btn-primary" style="padding: 10px 20px; font-size: 1rem;">Admin Dashboard</a>
+        </div>
         <!-- Toast Notification -->
         @if (session('success'))
             <div class="toast-container" id="toastContainer">
